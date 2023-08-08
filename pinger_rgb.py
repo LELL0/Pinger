@@ -24,7 +24,7 @@ def prt(text: str, color="RESET", dynamic=False, end="\n"):
         col = Fore.LIGHTMAGENTA_EX
     elif color == "LIGHTRED_EX":
         col = Fore.LIGHTRED_EX
-                                  
+
     if dynamic:
         print(f"{col}\r{text}\033[K{colorama.Style.RESET_ALL}", end=end)
     elif not dynamic:
@@ -104,6 +104,7 @@ all_packets = 0
 unreachable_packets_count = 0
 ping = 0
 pings_sum = 0
+pings_counter = 0
 reset_cursor = "\033[F" * 4
 time_now = "00/00/0000 00:00:00"
 no_answer_yet = 0
@@ -113,25 +114,30 @@ try:
     for line in output.stdout:
         all_packets += 1
         line = line.strip()
-        
+
         if "Destination Host Unreachable" in line:
             unreachable_packets_count += 1
             total_disconnects += 1
-            ping=f"{Fore.RED}NO INTERNET\033[K{colorama.Style.RESET_ALL}"
+            ping = f"{Fore.RED}NO INTERNET\033[K{colorama.Style.RESET_ALL}"
         if "no answer yet" in line:
             no_answer_yet += 1
             total_disconnects += 1
-            ping=f"{Fore.RED}NO INTERNET\033[K{colorama.Style.RESET_ALL}"
+            ping = f"{Fore.RED}NO INTERNET\033[K{colorama.Style.RESET_ALL}"
         if "bytes from" in line:
             good_packets += 1
             try:
                 pings_sum += float(line.split("=")[-1].split(" ")[0])
+                pings_counter += 1
             except:
                 pings_sum += 0
+
             if all_packets % 10 == 0:
-                ping = int(pings_sum // 10)
+                ping = int(pings_sum // pings_counter)
+                pings_counter = 0
                 pings_sum = 0
                 time_now = get_time_now()
+            elif ping == "NO INTERNET":
+                ping = int(pings_sum // pings_counter)
 
         print_data(
             reset_cursor,
@@ -147,6 +153,3 @@ try:
 except KeyboardInterrupt:
     print(f"\rExited AT: {get_time_now()}")
     exit(0)
-
-
-
