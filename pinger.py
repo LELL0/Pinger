@@ -76,6 +76,7 @@ all_packets = 0
 unreachable_packets_count = 0
 ping = 0
 pings_sum = 0
+pings_counter=0
 reset_cursor = "\033[F" * 4
 time_now = "00/00/0000 00:00:00"
 no_answer_yet = 0
@@ -98,12 +99,17 @@ try:
             good_packets += 1
             try:
                 pings_sum += float(line.split("=")[-1].split(" ")[0])
+                pings_counter += 1
             except:
                 pings_sum += 0
+
             if all_packets % 10 == 0:
-                ping = int(pings_sum // 10)
+                ping = int(pings_sum // pings_counter)
+                pings_counter = 0
                 pings_sum = 0
                 time_now = get_time_now()
+            elif ping == "NO INTERNET":
+                ping = int(pings_sum // pings_counter)
 
         print_data(
             reset_cursor,
