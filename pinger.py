@@ -108,7 +108,7 @@ try:
                 pings_counter = 0
                 pings_sum = 0
                 time_now = get_time_now()
-            elif ping == "NO INTERNET":
+            elif "NO INTERNET" in str(ping):
                 ping = int(pings_sum // pings_counter)
 
         print_data(
