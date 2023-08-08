@@ -70,7 +70,7 @@ def get_arguments():
         "--interval",
         help="seconds between sending each packet",
         required=False,
-        default="0.1",
+        default="0.2",
     )
     parser.add_argument(
         "-ip",
