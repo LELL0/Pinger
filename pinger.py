@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 import subprocess
 import argparse
 from datetime import datetime
@@ -19,7 +21,7 @@ def print_data(
     ping,
 ):
     print(reset_cursor, end="")
-    print(f"Ping Log => {line}")
+    print(f"Ping Log => {line}\033[K")
     print(f"Number Of Packets: {all_packets}  |   Date: {time_now}")
     print(
         f"Errors: {total_disconnects}   |   No Answer: {no_answer_yet}   |   Host Unreachable: {unreachable_packets_count}",
@@ -42,7 +44,7 @@ def get_arguments():
         "--interval",
         help="seconds between sending each packet",
         required=False,
-        default="0.2",
+        default="0.5",
     )
     parser.add_argument(
         "-ip",
@@ -75,8 +77,8 @@ print(f"STARTED AT: {get_time_now()}\n\n\n\n")
 all_packets = 0
 unreachable_packets_count = 0
 ping = 0
-pings_sum = 0
-pings_counter=0
+pings_list = []
+pings_counter = 0
 reset_cursor = "\033[F" * 4
 time_now = "00/00/0000 00:00:00"
 no_answer_yet = 0
@@ -86,31 +88,24 @@ try:
     for line in output.stdout:
         all_packets += 1
         line = line.strip()
-
         if "Destination Host Unreachable" in line:
             unreachable_packets_count += 1
             total_disconnects += 1
-            ping = "NO INTERNET"
+            ping = "NO CONNECTION"
         if "no answer yet" in line:
             no_answer_yet += 1
             total_disconnects += 1
-            ping = "NO INTERNET"
+            ping = "NO CONNECTION"
         if "bytes from" in line:
             good_packets += 1
             try:
-                pings_sum += float(line.split("=")[-1].split(" ")[0])
+                pings_list.insert(0,float(line.split("=")[-1].split(" ")[0]))
+                pings_list = pings_list[:10]
                 pings_counter += 1
-            except:
-                pings_sum += 0
-
-            if all_packets % 10 == 0:
-                ping = int(pings_sum // pings_counter)
-                pings_counter = 0
-                pings_sum = 0
+                ping = int(sum(pings_list) // len(pings_list))
                 time_now = get_time_now()
-            elif "NO INTERNET" in str(ping):
-                ping = int(pings_sum // pings_counter)
-
+            except:
+                pass
         print_data(
             reset_cursor,
             line,
