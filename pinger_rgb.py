@@ -8,6 +8,9 @@ import argparse
 from datetime import datetime
 import platform
 
+LOADING_FRAMES = ['[     ]', '[=    ]', '[==   ]', '[===  ]', '[==== ]', '[=====]', '[ ====]', '[  ===]', '[   ==]', '[    =]',
+                  '[     ]', '[     ]', '[    =]', '[   ==]', '[  ===]', '[ ====]', '[=====]', '[==== ]', '[===  ]', '[==   ]', '[=    ]', '[     ]']
+
 
 def check_os():
     if platform.system() == "Linux":
@@ -36,7 +39,8 @@ def prt(text: str, color="RESET", dynamic=False, end="\n"):
         col = Fore.LIGHTMAGENTA_EX
     elif color == "LIGHTRED_EX":
         col = Fore.LIGHTRED_EX
-
+    elif color == "LIGHTBLACK_EX":
+        col = Fore.LIGHTBLACK_EX
     if dynamic:
         print(f"{col}\r{text}\033[K{colorama.Style.RESET_ALL}", end=end)
     elif not dynamic:
@@ -48,10 +52,14 @@ def prt(text: str, color="RESET", dynamic=False, end="\n"):
 def print_data(reset_cursor, line, all_packets, time_now, total_disconnects, no_answer_yet, unreachable_packets_count, good_packets, ping, no_answer_yet_text, host_unreachable_text):
     print(reset_cursor, end="")
     prt(f"Ping Log => {line}", end="", color="LIGHTMAGENTA_EX")
-    prt(f"Number Of Packets: {all_packets}  |   Date: {time_now}", end="", color="BLUE")
-    prt( f"Errors: {total_disconnects}   |   {no_answer_yet_text}: {no_answer_yet}   |   {host_unreachable_text}: {unreachable_packets_count}", end="", color="RED", )
-    prt(f"Good Packets: {good_packets}  |   Ping: {ping}", end="", color="GREEN")
-    prt(f"Packet Loss: {round((total_disconnects/all_packets)*100,2)}%", end="", color="LIGHTMAGENTA_EX")
+    prt(f"Number Of Packets: {all_packets}  |   Date: {time_now}",
+        end="", color="BLUE")
+    prt(f"Errors: {total_disconnects}   |   {no_answer_yet_text}: {no_answer_yet}   |   {host_unreachable_text}: {unreachable_packets_count}", end="", color="RED", )
+    prt(f"Good Packets: {good_packets}  |   Ping: {ping}",
+        end="", color="GREEN")
+    prt(f"Packet Loss: {round((total_disconnects/all_packets)*100,2)}%",
+        end="", color="LIGHTMAGENTA_EX")
+    prt(LOADING_FRAMES[all_packets % (22)], end="", color="LIGHTBLACK_EX")
 
 
 def get_arguments():
@@ -119,10 +127,10 @@ if __name__ == "__main__":
     ping = 0
     pings_list = []
     pings_counter = 0
-    reset_cursor = "\033[F" * 5
+    reset_cursor = "\033[F" * 6
     time_now = "00/00/0000 00:00:00"
     no_answer_yet = 0
-    total_disconnects = -1
+    total_disconnects = 0
     good_packets = 0
     try:
         for line in output.stdout:
@@ -132,10 +140,16 @@ if __name__ == "__main__":
                 unreachable_packets_count += 1
                 total_disconnects += 1
                 ping = "NO CONNECTION"
+
             elif no_answer_yet_text in line:
                 no_answer_yet += 1
                 total_disconnects += 1
                 ping = "NO CONNECTION"
+
+            elif "General failure" in line:
+                total_disconnects += 1
+                ping = "NO CONNECTION"
+
             elif good_packets_text in line:
                 good_packets += 1
                 try:
@@ -148,9 +162,7 @@ if __name__ == "__main__":
                 except:
                     pass
             else:
-                # General failure
-                total_disconnects += 1
-                ping = "NO CONNECTION"
+                ping = ""
 
             print_data(reset_cursor, line, all_packets, time_now, total_disconnects, no_answer_yet,
                        unreachable_packets_count, good_packets, ping, no_answer_yet_text, host_unreachable_text)
