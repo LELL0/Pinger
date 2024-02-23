@@ -6,6 +6,16 @@ import colorama
 import sys
 import argparse
 from datetime import datetime
+import platform
+
+
+def check_os():
+    if platform.system() == "Linux":
+        return "Linux"
+    elif platform.system() == "Windows":
+        return "Windows"
+    else:
+        return "Unknown OS"
 
 
 def get_time_now():
@@ -48,13 +58,17 @@ def print_data(
 ):
     print(reset_cursor, end="")
     prt(f"Ping Log => {line}", end="", color="LIGHTMAGENTA_EX")
-    prt(f"Number Of Packets: {all_packets}  |   Date: {time_now}", end="", color="BLUE")
+    prt(f"Number Of Packets: {all_packets}  |   Date: {time_now}",
+        end="", color="BLUE")
     prt(
         f"Errors: {total_disconnects}   |   No Answer: {no_answer_yet}   |   Host Unreachable: {unreachable_packets_count}",
         end="",
         color="RED",
     )
-    prt(f"Good Packets: {good_packets}  |   Ping: {ping}", end="", color="GREEN")
+    prt(f"Good Packets: {good_packets}  |   Ping: {ping}",
+        end="", color="GREEN")
+    prt(f"Packet Loss: {round((total_disconnects/all_packets)*100,2)}%",
+        end="", color="LIGHTMAGENTA_EX")
 
 
 def get_arguments():
@@ -88,26 +102,32 @@ def get_arguments():
         required=False,
         default="64",
     )
+
     args = parser.parse_args()
     return args.count, args.interval, args.ip_address, args.size
 
 
 count, interval, ip_address, size = get_arguments()
-command = ["ping", "-O", "-S", size, "-i", interval, ip_address]
+
+os_type = check_os()
+
+if os_type == "Windows":
+    command = ["ping", "-t", ip_address]
+else:
+    command = ["ping", "-O", "-S", size, "-i", interval, ip_address]
 
 if int(count) > 0:
     command.extend(["-c", count])
 
-output = subprocess.Popen(
-    command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
-)
+output = subprocess.Popen(command, stdout=subprocess.PIPE,
+                          stderr=subprocess.PIPE, text=True)
 print(f"STARTED AT: {get_time_now()}\n\n\n\n")
 all_packets = 0
 unreachable_packets_count = 0
 ping = 0
 pings_list = []
 pings_counter = 0
-reset_cursor = "\033[F" * 4
+reset_cursor = "\033[F" * 5
 time_now = "00/00/0000 00:00:00"
 no_answer_yet = 0
 total_disconnects = 0
@@ -127,7 +147,7 @@ try:
         if "bytes from" in line:
             good_packets += 1
             try:
-                pings_list.insert(0,float(line.split("=")[-1].split(" ")[0]))
+                pings_list.insert(0, float(line.split("=")[-1].split(" ")[0]))
                 pings_list = pings_list[:10]
                 pings_counter += 1
                 ping = int(sum(pings_list) // len(pings_list))

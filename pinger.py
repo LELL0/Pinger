@@ -3,6 +3,16 @@
 import subprocess
 import argparse
 from datetime import datetime
+import platform
+
+
+def check_os():
+    if platform.system() == "Linux":
+        return "Linux"
+    elif platform.system() == "Windows":
+        return "Windows"
+    else:
+        return "Unknown OS"
 
 
 def get_time_now():
@@ -27,6 +37,7 @@ def print_data(
         f"Errors: {total_disconnects}   |   No Answer: {no_answer_yet}   |   Host Unreachable: {unreachable_packets_count}",
     )
     print(f"Good Packets: {good_packets}  |   Ping: {ping}\033[K")
+    print(f"Packet Loss: {round((total_disconnects/all_packets)*100,2)}%")
 
 
 def get_arguments():
@@ -65,7 +76,13 @@ def get_arguments():
 
 
 count, interval, ip_address, size = get_arguments()
-command = ["ping", "-O", "-S", size, "-i", interval, ip_address]
+
+os_type = check_os()
+
+if os_type == "Windows":
+    command = ["ping", "-t", ip_address]
+else:
+    command = ["ping", "-O", "-S", size, "-i", interval, ip_address]
 
 if int(count) > 0:
     command.extend(["-c", count])
@@ -79,7 +96,7 @@ unreachable_packets_count = 0
 ping = 0
 pings_list = []
 pings_counter = 0
-reset_cursor = "\033[F" * 4
+reset_cursor = "\033[F" * 5
 time_now = "00/00/0000 00:00:00"
 no_answer_yet = 0
 total_disconnects = 0
@@ -99,7 +116,7 @@ try:
         if "bytes from" in line:
             good_packets += 1
             try:
-                pings_list.insert(0,float(line.split("=")[-1].split(" ")[0]))
+                pings_list.insert(0, float(line.split("=")[-1].split(" ")[0]))
                 pings_list = pings_list[:10]
                 pings_counter += 1
                 ping = int(sum(pings_list) // len(pings_list))
