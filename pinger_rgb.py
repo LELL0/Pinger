@@ -45,30 +45,13 @@ def prt(text: str, color="RESET", dynamic=False, end="\n"):
     sys.stdout.flush()
 
 
-def print_data(
-    reset_cursor,
-    line,
-    all_packets,
-    time_now,
-    total_disconnects,
-    no_answer_yet,
-    unreachable_packets_count,
-    good_packets,
-    ping,
-):
+def print_data(reset_cursor, line, all_packets, time_now, total_disconnects, no_answer_yet, unreachable_packets_count, good_packets, ping, no_answer_yet_text, host_unreachable_text):
     print(reset_cursor, end="")
     prt(f"Ping Log => {line}", end="", color="LIGHTMAGENTA_EX")
-    prt(f"Number Of Packets: {all_packets}  |   Date: {time_now}",
-        end="", color="BLUE")
-    prt(
-        f"Errors: {total_disconnects}   |   No Answer: {no_answer_yet}   |   Host Unreachable: {unreachable_packets_count}",
-        end="",
-        color="RED",
-    )
-    prt(f"Good Packets: {good_packets}  |   Ping: {ping}",
-        end="", color="GREEN")
-    prt(f"Packet Loss: {round((total_disconnects/all_packets)*100,2)}%",
-        end="", color="LIGHTMAGENTA_EX")
+    prt(f"Number Of Packets: {all_packets}  |   Date: {time_now}", end="", color="BLUE")
+    prt( f"Errors: {total_disconnects}   |   {no_answer_yet_text}: {no_answer_yet}   |   {host_unreachable_text}: {unreachable_packets_count}", end="", color="RED", )
+    prt(f"Good Packets: {good_packets}  |   Ping: {ping}", end="", color="GREEN")
+    prt(f"Packet Loss: {round((total_disconnects/all_packets)*100,2)}%", end="", color="LIGHTMAGENTA_EX")
 
 
 def get_arguments():
@@ -86,7 +69,7 @@ def get_arguments():
         "--interval",
         help="seconds between sending each packet",
         required=False,
-        default="0.5",
+        default="1",
     )
     parser.add_argument(
         "-ip",
@@ -107,64 +90,71 @@ def get_arguments():
     return args.count, args.interval, args.ip_address, args.size
 
 
-count, interval, ip_address, size = get_arguments()
+if __name__ == "__main__":
 
-os_type = check_os()
+    count, interval, ip_address, size = get_arguments()
 
-if os_type == "Windows":
-    command = ["ping", "-t", ip_address]
-else:
-    command = ["ping", "-O", "-S", size, "-i", interval, ip_address]
+    os_type = check_os()
 
-if int(count) > 0:
-    command.extend(["-c", count])
+    if os_type == "Windows":
+        command = ["ping", "-t", ip_address]
+        good_packets_text = "Reply from"
+        no_answer_yet_text = "Request timed out"
+        host_unreachable_text = "Destination net unreachable"
 
-output = subprocess.Popen(command, stdout=subprocess.PIPE,
-                          stderr=subprocess.PIPE, text=True)
-print(f"STARTED AT: {get_time_now()}\n\n\n\n")
-all_packets = 0
-unreachable_packets_count = 0
-ping = 0
-pings_list = []
-pings_counter = 0
-reset_cursor = "\033[F" * 5
-time_now = "00/00/0000 00:00:00"
-no_answer_yet = 0
-total_disconnects = 0
-good_packets = 0
-try:
-    for line in output.stdout:
-        all_packets += 1
-        line = line.strip()
-        if "Destination Host Unreachable" in line:
-            unreachable_packets_count += 1
-            total_disconnects += 1
-            ping = "NO CONNECTION"
-        if "no answer yet" in line:
-            no_answer_yet += 1
-            total_disconnects += 1
-            ping = "NO CONNECTION"
-        if "bytes from" in line:
-            good_packets += 1
-            try:
-                pings_list.insert(0, float(line.split("=")[-1].split(" ")[0]))
-                pings_list = pings_list[:10]
-                pings_counter += 1
-                ping = int(sum(pings_list) // len(pings_list))
-                time_now = get_time_now()
-            except:
-                pass
-        print_data(
-            reset_cursor,
-            line,
-            all_packets,
-            time_now,
-            total_disconnects,
-            no_answer_yet,
-            unreachable_packets_count,
-            good_packets,
-            ping,
-        )
-except KeyboardInterrupt:
-    print(f"\rExited AT: {get_time_now()}")
-    exit(0)
+    else:
+        command = ["ping", "-O", "-S", size, "-i", interval, ip_address]
+        good_packets_text = "bytes from"
+        no_answer_yet_text = "no answer yet"
+        host_unreachable_text = "Host Unreachable"
+
+    if int(count) > 0:
+        command.extend(["-c", count])
+
+    output = subprocess.Popen(command, stdout=subprocess.PIPE,
+                              stderr=subprocess.PIPE, text=True)
+    print(f"STARTED AT: {get_time_now()}\n\n\n\n")
+    all_packets = 0
+    unreachable_packets_count = 0
+    ping = 0
+    pings_list = []
+    pings_counter = 0
+    reset_cursor = "\033[F" * 5
+    time_now = "00/00/0000 00:00:00"
+    no_answer_yet = 0
+    total_disconnects = -1
+    good_packets = 0
+    try:
+        for line in output.stdout:
+            all_packets += 1
+            line = line.strip()
+            if host_unreachable_text in line:
+                unreachable_packets_count += 1
+                total_disconnects += 1
+                ping = "NO CONNECTION"
+            elif no_answer_yet_text in line:
+                no_answer_yet += 1
+                total_disconnects += 1
+                ping = "NO CONNECTION"
+            elif good_packets_text in line:
+                good_packets += 1
+                try:
+                    pings_list.insert(
+                        0, float(line.split("=")[-1].split(" ")[0]))
+                    pings_list = pings_list[:10]
+                    pings_counter += 1
+                    ping = int(sum(pings_list) // len(pings_list))
+                    time_now = get_time_now()
+                except:
+                    pass
+            else:
+                # General failure
+                total_disconnects += 1
+                ping = "NO CONNECTION"
+
+            print_data(reset_cursor, line, all_packets, time_now, total_disconnects, no_answer_yet,
+                       unreachable_packets_count, good_packets, ping, no_answer_yet_text, host_unreachable_text)
+
+    except KeyboardInterrupt:
+        print(f"\rExited AT: {get_time_now()}")
+        exit(0)
