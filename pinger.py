@@ -5,6 +5,9 @@ import argparse
 from datetime import datetime
 import platform
 
+LOADING_FRAMES = ['[     ]', '[=    ]', '[==   ]', '[===  ]', '[==== ]', '[=====]', '[ ====]', '[  ===]', '[   ==]', '[    =]',
+                  '[     ]', '[     ]', '[    =]', '[   ==]', '[  ===]', '[ ====]', '[=====]', '[==== ]', '[===  ]', '[==   ]', '[=    ]', '[     ]']
+
 
 def check_os():
     if platform.system() == "Linux":
@@ -26,7 +29,8 @@ def print_data(reset_cursor, line, all_packets, time_now, total_disconnects, no_
     print(f"Errors: {total_disconnects}   |   {no_answer_yet_text}: {no_answer_yet}   |   {host_unreachable_text}: {unreachable_packets_count}")
     print(f"Good Packets: {good_packets}  |   Ping: {ping}\033[K")
     print(
-        f"Packet Loss: {round((total_disconnects/all_packets)*100,2)}%\033[K",end="")
+        f"Packet Loss: {round((total_disconnects/all_packets)*100,2)}%\033[K")
+    print(LOADING_FRAMES[all_packets % (22)], end="")
 
 
 def get_arguments():
@@ -92,7 +96,7 @@ if __name__ == "__main__":
     ping = 0
     pings_list = []
     pings_counter = 0
-    reset_cursor = "\033[F" * 5
+    reset_cursor = "\033[F" * 6
     time_now = "00/00/0000 00:00:00"
     no_answer_yet = 0
     total_disconnects = -1
@@ -125,7 +129,8 @@ if __name__ == "__main__":
                 total_disconnects += 1
                 ping = "NO CONNECTION"
 
-            print_data(reset_cursor,line,all_packets,time_now,total_disconnects,no_answer_yet,unreachable_packets_count,good_packets,ping,no_answer_yet_text,host_unreachable_text)
+            print_data(reset_cursor, line, all_packets, time_now, total_disconnects, no_answer_yet,
+                       unreachable_packets_count, good_packets, ping, no_answer_yet_text, host_unreachable_text)
 
     except KeyboardInterrupt:
         print(f"\rExited AT: {get_time_now()}")
