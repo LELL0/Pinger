@@ -5,8 +5,12 @@ import argparse
 from datetime import datetime
 import platform
 
+NUM_OF_LINES = 6
+
 LOADING_FRAMES = ['[     ]', '[=    ]', '[==   ]', '[===  ]', '[==== ]', '[=====]', '[ ====]', '[  ===]', '[   ==]', '[    =]',
-                  '[     ]', '[     ]', '[    =]', '[   ==]', '[  ===]', '[ ====]', '[=====]', '[==== ]', '[===  ]', '[==   ]', '[=    ]', '[     ]']
+                  '[     ]', '[    =]', '[   ==]', '[  ===]', '[ ====]', '[=====]', '[==== ]', '[===  ]', '[==   ]', '[=    ]']
+
+NUM_OF_LOADING_FRAMES = len(LOADING_FRAMES)
 
 
 def check_os():
@@ -30,7 +34,7 @@ def print_data(reset_cursor, line, all_packets, time_now, total_disconnects, no_
     print(f"Good Packets: {good_packets}  |   Ping: {ping}\033[K")
     print(
         f"Packet Loss: {round((total_disconnects/all_packets)*100,2)}%\033[K")
-    print(LOADING_FRAMES[all_packets % (22)], end="")
+    print(LOADING_FRAMES[all_packets % (NUM_OF_LOADING_FRAMES)], end="")
 
 
 def get_arguments():
@@ -90,13 +94,13 @@ if __name__ == "__main__":
 
     output = subprocess.Popen(command, stdout=subprocess.PIPE,
                               stderr=subprocess.PIPE, text=True)
-    print(f"STARTED AT: {get_time_now()}\n\n\n\n")
+    print(f"STARTED AT: {get_time_now()}"+"\n"*NUM_OF_LINES)
     all_packets = 0
     unreachable_packets_count = 0
     ping = 0
     pings_list = []
     pings_counter = 0
-    reset_cursor = "\033[F" * 6
+    reset_cursor = "\033[F" * NUM_OF_LINES
     time_now = "00/00/0000 00:00:00"
     no_answer_yet = 0
     total_disconnects = -1
