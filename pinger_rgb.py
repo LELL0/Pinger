@@ -56,13 +56,10 @@ def prt(text: str, color="RESET", dynamic=False, end="\n"):
 def print_data(reset_cursor, line, all_packets, time_now, total_disconnects, no_answer_yet, unreachable_packets_count, good_packets, ping, no_answer_yet_text, host_unreachable_text):
     print(reset_cursor, end="")
     prt(f"Ping Log => {line}", end="", color="LIGHTMAGENTA_EX")
-    prt(f"Number Of Packets: {all_packets}  |   Date: {time_now}",
-        end="", color="BLUE")
+    prt(f"Number Of Packets: {all_packets}  |   Date: {time_now}", end="", color="BLUE")
     prt(f"Errors: {total_disconnects}   |   {no_answer_yet_text}: {no_answer_yet}   |   {host_unreachable_text}: {unreachable_packets_count}", end="", color="RED", )
-    prt(f"Good Packets: {good_packets}  |   Ping: {ping}",
-        end="", color="GREEN")
-    prt(f"Packet Loss: {round((total_disconnects/all_packets)*100,2)}%",
-        end="", color="LIGHTMAGENTA_EX")
+    prt(f"Good Packets: {good_packets}  |   Ping: {ping}", end="", color="GREEN")
+    prt(f"Packet Loss: {round((total_disconnects/all_packets)*100,2)}%", end="", color="LIGHTMAGENTA_EX")
     prt(LOADING_FRAMES[all_packets % (NUM_OF_LOADING_FRAMES)], end="", color="LIGHTBLACK_EX")
 
 
@@ -123,8 +120,7 @@ if __name__ == "__main__":
     if int(count) > 0:
         command.extend(["-c", count])
 
-    output = subprocess.Popen(command, stdout=subprocess.PIPE,
-                              stderr=subprocess.PIPE, text=True)
+    output = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     print(f"STARTED AT: {get_time_now()}"+"\n"*NUM_OF_LINES)
     all_packets = 0
     unreachable_packets_count = 0
