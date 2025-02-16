@@ -32,8 +32,7 @@ def print_data(reset_cursor, line, all_packets, time_now, total_disconnects, no_
     print(f"Number Of Packets: {all_packets}  |   Date: {time_now}")
     print(f"Errors: {total_disconnects}   |   {no_answer_yet_text}: {no_answer_yet}   |   {host_unreachable_text}: {unreachable_packets_count}")
     print(f"Good Packets: {good_packets}  |   Ping: {ping}\033[K")
-    print(
-        f"Packet Loss: {round((total_disconnects/all_packets)*100,2)}%\033[K")
+    print(f"Packet Loss: {round((total_disconnects/all_packets)*100,2)}%\033[K")
     print(LOADING_FRAMES[all_packets % (NUM_OF_LOADING_FRAMES)], end="")
 
 
@@ -92,8 +91,7 @@ if __name__ == "__main__":
     if int(count) > 0:
         command.extend(["-c", count])
 
-    output = subprocess.Popen(command, stdout=subprocess.PIPE,
-                              stderr=subprocess.PIPE, text=True)
+    output = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     print(f"STARTED AT: {get_time_now()}"+"\n"*NUM_OF_LINES)
     all_packets = 0
     unreachable_packets_count = 0
